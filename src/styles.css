@@ -50,7 +50,7 @@ button { color: inherit; }
 .search input::placeholder { color: #b99abe; }
 .tags { display: flex; flex-wrap: wrap; gap: 8px; padding: 44px 0 32px; }
 .tags button { border: 1px solid rgba(232, 182, 207, .35); background: transparent; border-radius: 99px; color: #d5b7d2; padding: 8px 15px; font-size: 11px; cursor: pointer; }
-.tags button:hover, .tags button.active { background: var(--starlight); border-color: var(--starlight); color: var(--midnight); box-shadow: 0 0 16px rgba(247, 233, 103, .14); }
+.tags button:hover, .tags button.active { background: #e7b3c7; border-color: #e7b3c7; color: #382e63; box-shadow: 0 0 16px rgba(231, 179, 199, .16); }
 .story-grid { border-top: 1px solid rgba(232, 182, 207, .22); }
 .story-card { width: 100%; display: grid; grid-template-columns: 80px 1fr; gap: 22px; text-align: left; padding: 36px 8px; background: transparent; border: 0; border-bottom: 1px solid rgba(232, 182, 207, .22); cursor: pointer; transition: background .2s, padding .2s; }
 .story-card:hover { background: rgba(128, 88, 165, .22); padding-left: 20px; padding-right: 20px; }

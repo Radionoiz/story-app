@@ -49,10 +49,6 @@ const stories = Object.entries(storyFiles)
   .map(([path, raw]) => parseStory(path, raw))
   .sort((a, b) => (b.date || '').localeCompare(a.date || '') || a.title.localeCompare(b.title))
 
-function StoryMark() {
-  return <span className="story-mark" aria-hidden="true"><i /><i /><i /></span>
-}
-
 function App() {
   const initialSlug = decodeURIComponent(location.hash.replace(/^#\/?/, ''))
   const [activeSlug, setActiveSlug] = useState(initialSlug)
@@ -88,7 +84,7 @@ function App() {
     return (
       <div className="reader-shell">
         <header className="reader-nav">
-          <button className="brand button-reset" onClick={goHome}><StoryMark /> <span>Nix's Story Chronicles</span></button>
+          <button className="brand button-reset" onClick={goHome}> <span>Nix's Story Chronicles</span></button>
           <button className="back button-reset" onClick={goHome}>← All stories</button>
         </header>
         <main className="reader">
@@ -101,7 +97,6 @@ function App() {
           </div>
           <article>{activeStory.body.split(/\n\s*\n/).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</article>
           <footer className="reader-footer">
-            <StoryMark />
             <p>Thank you for reading.</p>
             <button onClick={goHome}>Discover another story</button>
           </footer>
@@ -113,7 +108,7 @@ function App() {
   return (
     <div className="site-shell">
       <header className="topbar">
-        <div className="brand"><StoryMark /><span>Nix's Story Chronicles</span></div>
+        <div className="brand"><span>Nix's Story Chronicles</span></div>
         <a href="#collection">Browse the collection ↓</a>
       </header>
 
@@ -153,7 +148,7 @@ function App() {
         </section>
       </main>
 
-      <footer className="site-footer"><StoryMark /><p>A growing shelf of original stories.</p><span>Made for slow reading.</span></footer>
+      <footer className="site-footer"><p>A growing shelf of original stories.</p><span>Made for slow reading.</span></footer>
     </div>
   )
 }
