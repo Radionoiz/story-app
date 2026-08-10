@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
 
@@ -49,17 +49,38 @@ const stories = Object.entries(storyFiles)
   .map(([path, raw]) => parseStory(path, raw))
   .sort((a, b) => (b.date || '').localeCompare(a.date || '') || a.title.localeCompare(b.title))
 
+function FontToggle({ enabled, onChange }) {
+  return (
+    <div className="font-control">
+      <span className="font-control-label" id="font-toggle-label">Readable font</span>
+      <button className="font-toggle" type="button" role="switch" aria-checked={enabled} aria-labelledby="font-toggle-label" onClick={() => onChange(!enabled)}>
+        <span className="font-toggle-knob" />
+      </button>
+      <span className="tooltip-wrap">
+        <button className="tooltip-trigger" type="button" aria-label="About the readable font" onKeyDown={(event) => { if (event.key === 'Escape') event.currentTarget.blur() }}>?</button>
+        <span className="tooltip" role="tooltip">Atkinson Hyperlegible uses distinct letter shapes that may make reading easier for people with low vision or dyslexia.</span>
+      </span>
+    </div>
+  )
+}
+
 function App() {
+  const mainRef = useRef(null)
   const initialSlug = decodeURIComponent(location.hash.replace(/^#\/?/, ''))
   const [activeSlug, setActiveSlug] = useState(initialSlug)
   const [query, setQuery] = useState('')
   const [tag, setTag] = useState('All stories')
+  const [hyperlegible, setHyperlegible] = useState(() => localStorage.getItem('hyperlegible-font') === 'true')
 
   useEffect(() => {
     const onHashChange = () => setActiveSlug(decodeURIComponent(location.hash.replace(/^#\/?/, '')))
     addEventListener('hashchange', onHashChange)
     return () => removeEventListener('hashchange', onHashChange)
   }, [])
+
+  useEffect(() => {
+    localStorage.setItem('hyperlegible-font', String(hyperlegible))
+  }, [hyperlegible])
 
   const tags = useMemo(() => [...new Set(stories.flatMap((story) => story.tags))].sort(), [])
   const filtered = stories.filter((story) => {
@@ -68,26 +89,35 @@ function App() {
   })
   const activeStory = stories.find((story) => story.slug === activeSlug)
 
+  useEffect(() => {
+    document.title = activeStory ? `${activeStory.title} | Nix's Story Chronicles` : "Nix's Story Chronicles"
+    if (activeSlug) mainRef.current?.focus()
+  }, [activeSlug, activeStory])
+
   function openStory(slug) {
     location.hash = `/${encodeURIComponent(slug)}`
     setActiveSlug(slug)
-    scrollTo({ top: 0, behavior: 'smooth' })
+    scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
   }
 
   function goHome() {
     history.pushState('', document.title, location.pathname + location.search)
     setActiveSlug('')
-    scrollTo({ top: 0, behavior: 'smooth' })
+    scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
   }
 
   if (activeStory) {
     return (
-      <div className="reader-shell">
-        <header className="reader-nav">
+      <div className={`reader-shell${hyperlegible ? ' hyperlegible' : ''}`}>
+        <a className="skip-link" href="#main-content">Skip to story</a>
+        <header className="reader-nav" aria-label="Site header">
           <button className="brand button-reset" onClick={goHome}> <span>Nix's Story Chronicles</span></button>
-          <button className="back button-reset" onClick={goHome}>← All stories</button>
+          <nav className="nav-actions" aria-label="Reader navigation">
+            <FontToggle enabled={hyperlegible} onChange={setHyperlegible} />
+            <button className="back button-reset" onClick={goHome}>← All stories</button>
+          </nav>
         </header>
-        <main className="reader">
+        <main className="reader" id="main-content" ref={mainRef} tabIndex="-1">
           <div className="reader-kicker">{activeStory.tags.join(' · ') || 'A story'}</div>
           <h1>{activeStory.title}</h1>
           <div className="reader-meta">
@@ -106,13 +136,17 @@ function App() {
   }
 
   return (
-    <div className="site-shell">
-      <header className="topbar">
+    <div className={`site-shell${hyperlegible ? ' hyperlegible' : ''}`}>
+      <a className="skip-link" href="#main-content">Skip to stories</a>
+      <header className="topbar" aria-label="Site header">
         <div className="brand"><span>Nix's Story Chronicles</span></div>
-        <a href="#collection">Browse the collection ↓</a>
+        <nav className="nav-actions" aria-label="Site navigation">
+          <FontToggle enabled={hyperlegible} onChange={setHyperlegible} />
+          <a href="#collection">Browse the collection ↓</a>
+        </nav>
       </header>
 
-      <main>
+      <main id="main-content" ref={mainRef} tabIndex="-1">
         <section className="hero">
           <p className="eyebrow">Original fiction, collected</p>
           <h1>Stories from Nix's<br /><em>personal collection.</em></h1>
@@ -123,18 +157,20 @@ function App() {
         <section className="collection" id="collection">
           <div className="section-head">
             <div><p className="eyebrow">The collection</p><h2>Choose a story</h2></div>
-            <label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search stories" /></label>
+            <label className="search"><span aria-hidden="true">⌕</span><span className="sr-only">Search stories by title, description, or tag</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search stories" /></label>
           </div>
 
           <div className="tags" aria-label="Filter by tag">
-            {['All stories', ...tags].map((item) => <button className={tag === item ? 'active' : ''} onClick={() => setTag(item)} key={item}>{item}</button>)}
+            {['All stories', ...tags].map((item) => <button className={tag === item ? 'active' : ''} aria-pressed={tag === item} onClick={() => setTag(item)} key={item}>{item}</button>)}
           </div>
+
+          <p className="sr-only" role="status" aria-live="polite">{filtered.length} {filtered.length === 1 ? 'story' : 'stories'} available</p>
 
           {filtered.length ? (
             <div className="story-grid">
               {filtered.map((story, index) => (
-                <button className="story-card" onClick={() => openStory(story.slug)} key={story.slug}>
-                  <div className="card-number">{String(index + 1).padStart(2, '0')}</div>
+                <button className="story-card" onClick={() => openStory(story.slug)} aria-label={`Read ${story.title}, ${story.minutes} minute read`} key={story.slug}>
+                  <div className="card-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</div>
                   <div className="card-content">
                     <div className="card-tags">{story.tags.map((item) => <span key={item}>{item}</span>)}</div>
                     <h3>{story.title}</h3>
