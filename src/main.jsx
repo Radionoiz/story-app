@@ -52,12 +52,12 @@ const stories = Object.entries(storyFiles)
 function FontToggle({ enabled, onChange }) {
   return (
     <div className="font-control">
-      <span className="font-control-label" id="font-toggle-label">Readable font</span>
+      <span className="font-control-label" id="font-toggle-label">Low visibility font</span>
       <button className="font-toggle" type="button" role="switch" aria-checked={enabled} aria-labelledby="font-toggle-label" onClick={() => onChange(!enabled)}>
         <span className="font-toggle-knob" />
       </button>
       <span className="tooltip-wrap">
-        <button className="tooltip-trigger" type="button" aria-label="About the readable font" onKeyDown={(event) => { if (event.key === 'Escape') event.currentTarget.blur() }}>?</button>
+        <button className="tooltip-trigger" type="button" aria-label="About the low visibility font" onKeyDown={(event) => { if (event.key === 'Escape') event.currentTarget.blur() }}>?</button>
         <span className="tooltip" role="tooltip">Atkinson Hyperlegible uses distinct letter shapes that may make reading easier for people with low vision or dyslexia.</span>
       </span>
     </div>
