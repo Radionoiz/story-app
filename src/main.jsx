@@ -88,7 +88,7 @@ function App() {
     return (
       <div className="reader-shell">
         <header className="reader-nav">
-          <button className="brand button-reset" onClick={goHome}><StoryMark /> <span>The Story Shelf</span></button>
+          <button className="brand button-reset" onClick={goHome}><StoryMark /> <span>Nix's Story Chronicles</span></button>
           <button className="back button-reset" onClick={goHome}>← All stories</button>
         </header>
         <main className="reader">
@@ -113,15 +113,15 @@ function App() {
   return (
     <div className="site-shell">
       <header className="topbar">
-        <div className="brand"><StoryMark /><span>The Story Shelf</span></div>
+        <div className="brand"><StoryMark /><span>Nix's Story Chronicles</span></div>
         <a href="#collection">Browse the collection ↓</a>
       </header>
 
       <main>
         <section className="hero">
           <p className="eyebrow">Original fiction, collected</p>
-          <h1>Stories for the<br /><em>quiet hours.</em></h1>
-          <p className="intro">Small worlds, strange turns, and moments worth lingering over. Find a comfortable place and stay awhile.</p>
+          <h1>Stories from Nix's<br /><em>personal collection.</em></h1>
+          <p className="intro">All minds, all worlds, moments of love and longing, to disappear into and discover.</p>
           <div className="hero-stats"><span>{stories.length} {stories.length === 1 ? 'story' : 'stories'}</span><span>{tags.length} collections</span></div>
         </section>
 
