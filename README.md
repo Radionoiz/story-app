@@ -65,3 +65,17 @@ The first chapter begins here.
 ```
 
 Chapters are sorted by `order`. If `order` is omitted, the number at the beginning of the filename is used. Each chapter receives its own URL and previous/next navigation. The original single-file story format remains supported.
+
+## Format story text
+
+Story and chapter bodies support Markdown and safe HTML. For example:
+
+```txt
+This is *italic* or <em>italic</em>.
+
+This is **bold** or <strong>bold</strong>.
+
+You can also use <i>italic</i> and <b>bold</b>.
+```
+
+HTML is sanitized when rendered. Unsafe elements and attributes, such as scripts and inline event handlers, are removed automatically.

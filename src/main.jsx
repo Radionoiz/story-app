@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
+import rehypeSanitize from 'rehype-sanitize'
 import './styles.css'
 
 const storyFiles = import.meta.glob('../stories/**/*.txt', {
@@ -203,7 +206,9 @@ function App() {
               ))}
             </nav>
           )}
-          <article aria-label={activeStory.chapters.length > 1 ? activeChapter.title : activeStory.title}>{activeChapter.body.split(/\n\s*\n/).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</article>
+          <article aria-label={activeStory.chapters.length > 1 ? activeChapter.title : activeStory.title}>
+            <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>{activeChapter.body}</ReactMarkdown>
+          </article>
           <footer className="reader-footer">
             {activeStory.chapters.length > 1 ? (
               <nav className="chapter-pagination" aria-label="Chapter pagination">
