@@ -1,0 +1,7 @@
+---
+title: The House That Remembered
+tags: mystery, magical realism
+date: 2026-08-14
+excerpt: When Lena inherits an empty house, each room remembers a different version of her family.
+slug: the-house-that-remembered
+---

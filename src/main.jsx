@@ -10,7 +10,7 @@ const storyFiles = import.meta.glob('../stories/**/*.txt', {
 
 const monthDate = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' })
 
-function parseStory(path, raw) {
+function parseFile(path, raw) {
   const fileName = path.split('/').pop().replace(/\.txt$/, '')
   const fallbackTitle = fileName.replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
   const normalized = raw.replace(/\r\n/g, '\n')
@@ -34,7 +34,10 @@ function parseStory(path, raw) {
   const words = body.split(/\s+/).filter(Boolean).length
 
   return {
-    slug: metadata.slug || fileName,
+    path,
+    fileName,
+    metadata,
+    slug: metadata.slug || fileName.replace(/^\d+[-_]?/, ''),
     title: metadata.title || fallbackTitle,
     date: metadata.date || '',
     tags,
@@ -45,9 +48,56 @@ function parseStory(path, raw) {
   }
 }
 
-const stories = Object.entries(storyFiles)
-  .map(([path, raw]) => parseStory(path, raw))
-  .sort((a, b) => (b.date || '').localeCompare(a.date || '') || a.title.localeCompare(b.title))
+function buildLibrary(files) {
+  const standalone = []
+  const folders = new Map()
+
+  Object.entries(files).forEach(([path, raw]) => {
+    const parsed = parseFile(path, raw)
+    const relativePath = path.replace(/^\.\.\/stories\//, '')
+    const parts = relativePath.split('/')
+
+    if (parts.length === 1) {
+      standalone.push({ ...parsed, chapters: [{ ...parsed, order: 1 }] })
+      return
+    }
+
+    const folder = parts.slice(0, -1).join('/')
+    if (!folders.has(folder)) folders.set(folder, [])
+    folders.get(folder).push(parsed)
+  })
+
+  const chaptered = [...folders.entries()].map(([folder, entries]) => {
+    const manifest = entries.find((entry) => ['story', 'index'].includes(entry.fileName.toLowerCase()))
+    const chapters = entries
+      .filter((entry) => entry !== manifest)
+      .map((chapter) => ({
+        ...chapter,
+        order: Number(chapter.metadata.order) || Number(chapter.fileName.match(/^\d+/)?.[0]) || 999,
+      }))
+      .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title))
+    const folderName = folder.split('/').pop()
+    const fallbackTitle = folderName.replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
+    const words = chapters.reduce((total, chapter) => total + chapter.words, 0)
+    const chapterTags = [...new Set(chapters.flatMap((chapter) => chapter.tags))]
+
+    return {
+      slug: manifest?.metadata.slug || folder.replace(/\//g, '-'),
+      title: manifest?.title || fallbackTitle,
+      date: manifest?.date || chapters[0]?.date || '',
+      tags: manifest?.tags.length ? manifest.tags : chapterTags,
+      excerpt: manifest?.metadata.excerpt || chapters[0]?.excerpt || '',
+      words,
+      minutes: Math.max(1, Math.ceil(words / 220)),
+      chapters,
+    }
+  }).filter((story) => story.chapters.length)
+
+  return [...standalone, ...chaptered]
+    .sort((a, b) => (b.date || '').localeCompare(a.date || '') || a.title.localeCompare(b.title))
+}
+
+const stories = buildLibrary(storyFiles)
 
 function FontToggle({ enabled, onChange }) {
   return (
@@ -66,14 +116,14 @@ function FontToggle({ enabled, onChange }) {
 
 function App() {
   const mainRef = useRef(null)
-  const initialSlug = decodeURIComponent(location.hash.replace(/^#\/?/, ''))
-  const [activeSlug, setActiveSlug] = useState(initialSlug)
+  const initialPath = decodeURIComponent(location.hash.replace(/^#\/?/, ''))
+  const [activePath, setActivePath] = useState(initialPath)
   const [query, setQuery] = useState('')
   const [tag, setTag] = useState('All stories')
   const [hyperlegible, setHyperlegible] = useState(() => localStorage.getItem('hyperlegible-font') === 'true')
 
   useEffect(() => {
-    const onHashChange = () => setActiveSlug(decodeURIComponent(location.hash.replace(/^#\/?/, '')))
+    const onHashChange = () => setActivePath(decodeURIComponent(location.hash.replace(/^#\/?/, '')))
     addEventListener('hashchange', onHashChange)
     return () => removeEventListener('hashchange', onHashChange)
   }, [])
@@ -84,29 +134,42 @@ function App() {
 
   const tags = useMemo(() => [...new Set(stories.flatMap((story) => story.tags))].sort(), [])
   const filtered = stories.filter((story) => {
-    const haystack = `${story.title} ${story.excerpt} ${story.tags.join(' ')}`.toLowerCase()
+    const haystack = `${story.title} ${story.excerpt} ${story.tags.join(' ')} ${story.chapters.map((chapter) => chapter.title).join(' ')}`.toLowerCase()
     return (!query || haystack.includes(query.toLowerCase())) && (tag === 'All stories' || story.tags.includes(tag))
   })
-  const activeStory = stories.find((story) => story.slug === activeSlug)
+  const [storySlug, chapterSlug] = activePath.split('/')
+  const activeStory = stories.find((story) => story.slug === storySlug)
+  const activeChapter = activeStory?.chapters.find((chapter) => chapter.slug === chapterSlug) || activeStory?.chapters[0]
+  const activeChapterIndex = activeStory?.chapters.indexOf(activeChapter) ?? -1
 
   useEffect(() => {
-    document.title = activeStory ? `${activeStory.title} | Nix's Story Chronicles` : "Nix's Story Chronicles"
-    if (activeSlug) mainRef.current?.focus()
-  }, [activeSlug, activeStory])
+    const chapterTitle = activeStory?.chapters.length > 1 ? ` — ${activeChapter?.title}` : ''
+    document.title = activeStory ? `${activeStory.title}${chapterTitle} | Nix's Story Chronicles` : "Nix's Story Chronicles"
+    if (activePath) mainRef.current?.focus()
+  }, [activePath, activeStory, activeChapter])
 
   function openStory(slug) {
-    location.hash = `/${encodeURIComponent(slug)}`
-    setActiveSlug(slug)
+    const story = stories.find((item) => item.slug === slug)
+    const path = story?.chapters.length > 1 ? `${slug}/${story.chapters[0].slug}` : slug
+    location.hash = `/${path.split('/').map(encodeURIComponent).join('/')}`
+    setActivePath(path)
+    scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+  }
+
+  function openChapter(chapter) {
+    const path = `${activeStory.slug}/${chapter.slug}`
+    location.hash = `/${path.split('/').map(encodeURIComponent).join('/')}`
+    setActivePath(path)
     scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
   }
 
   function goHome() {
     history.pushState('', document.title, location.pathname + location.search)
-    setActiveSlug('')
+    setActivePath('')
     scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
   }
 
-  if (activeStory) {
+  if (activeStory && activeChapter) {
     return (
       <div className={`reader-shell${hyperlegible ? ' hyperlegible' : ''}`}>
         <a className="skip-link" href="#main-content">Skip to story</a>
@@ -120,15 +183,40 @@ function App() {
         <main className="reader" id="main-content" ref={mainRef} tabIndex="-1">
           <div className="reader-kicker">{activeStory.tags.join(' · ') || 'A story'}</div>
           <h1>{activeStory.title}</h1>
+          {activeStory.chapters.length > 1 && (
+            <div className="chapter-heading">
+              <span>Chapter {activeChapterIndex + 1} of {activeStory.chapters.length}</span>
+              <h2>{activeChapter.title}</h2>
+            </div>
+          )}
           <div className="reader-meta">
             {activeStory.date && <span>{monthDate.format(new Date(`${activeStory.date}T12:00:00`))}</span>}
-            <span>{activeStory.minutes} min read</span>
-            <span>{activeStory.words.toLocaleString()} words</span>
+            <span>{activeChapter.minutes} min read</span>
+            <span>{activeChapter.words.toLocaleString()} words</span>
           </div>
-          <article>{activeStory.body.split(/\n\s*\n/).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</article>
+          {activeStory.chapters.length > 1 && (
+            <nav className="chapter-list" aria-label="Chapters">
+              {activeStory.chapters.map((chapter, index) => (
+                <button aria-current={chapter === activeChapter ? 'page' : undefined} onClick={() => openChapter(chapter)} key={chapter.slug}>
+                  <span>{String(index + 1).padStart(2, '0')}</span> {chapter.title}
+                </button>
+              ))}
+            </nav>
+          )}
+          <article aria-label={activeStory.chapters.length > 1 ? activeChapter.title : activeStory.title}>{activeChapter.body.split(/\n\s*\n/).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</article>
           <footer className="reader-footer">
-            <p>Thank you for reading.</p>
-            <button onClick={goHome}>Discover another story</button>
+            {activeStory.chapters.length > 1 ? (
+              <nav className="chapter-pagination" aria-label="Chapter pagination">
+                {activeChapterIndex > 0
+                  ? <button className="previous" onClick={() => openChapter(activeStory.chapters[activeChapterIndex - 1])}><span>← Previous</span>{activeStory.chapters[activeChapterIndex - 1].title}</button>
+                  : <span />}
+                {activeChapterIndex < activeStory.chapters.length - 1
+                  ? <button className="next" onClick={() => openChapter(activeStory.chapters[activeChapterIndex + 1])}><span>Next →</span>{activeStory.chapters[activeChapterIndex + 1].title}</button>
+                  : <button className="next" onClick={goHome}><span>Story complete</span>Discover another story</button>}
+              </nav>
+            ) : (
+              <><p>Thank you for reading.</p><button onClick={goHome}>Discover another story</button></>
+            )}
           </footer>
         </main>
       </div>
@@ -175,7 +263,7 @@ function App() {
                     <div className="card-tags">{story.tags.map((item) => <span key={item}>{item}</span>)}</div>
                     <h3>{story.title}</h3>
                     <p>{story.excerpt}</p>
-                    <div className="card-meta"><span>{story.minutes} min read</span><span className="read-link">Read story <b>→</b></span></div>
+                    <div className="card-meta"><span>{story.chapters.length > 1 ? `${story.chapters.length} chapters · ${story.minutes} min` : `${story.minutes} min read`}</span><span className="read-link">Read story <b>→</b></span></div>
                   </div>
                 </button>
               ))}
