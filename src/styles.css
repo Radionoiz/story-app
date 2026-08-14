@@ -119,6 +119,9 @@ main:focus { outline: none; }
 }
 @media (max-width: 700px) {
   .topbar, .reader-nav { height: 70px; }.topbar a, .font-control-label { display: none; }.nav-actions { gap: 14px; }.tooltip { right: -42px; width: 230px; }.tooltip::before { right: 46px; }.hero { min-height: auto; padding-top: 75px; background-position: 64% center; }.hero h1 { font-size: 59px; }
+  .hero::before { background: linear-gradient(to bottom, transparent 20%, rgba(247, 220, 227, .35) 48%, rgba(247, 220, 227, .86) 100%); }
+  .hero .intro { color: #37345f; }
+  .hero-stats { color: #403963; font-size: 11px; font-weight: 600; }
   .section-head { align-items: stretch; flex-direction: column; }.search { width: 100%; }.story-card { grid-template-columns: 40px 1fr; gap: 10px; }.card-meta { align-items: end; }
   .site-footer { align-items: flex-start; }.site-footer span:last-child { display: none; }.reader-nav .brand span { display: none; }.reader { padding-top: 65px; }.reader h1 { margin-left: 0; margin-right: 0; }.reader-meta { flex-wrap: wrap; margin-bottom: 50px; }.reader article { font-size: 19px; }
 }
