@@ -76,6 +76,8 @@ This is *italic* or <em>italic</em>.
 This is **bold** or <strong>bold</strong>.
 
 You can also use <i>italic</i> and <b>bold</b>.
+
+This is <u>underlined</u>.
 ```
 
 HTML is sanitized when rendered. Unsafe elements and attributes, such as scripts and inline event handlers, are removed automatically.

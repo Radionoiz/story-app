@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import rehypeSanitize from 'rehype-sanitize'
+import { defaultSchema } from 'hast-util-sanitize'
 import './styles.css'
 
 const storyFiles = import.meta.glob('../stories/**/*.txt', {
@@ -12,6 +13,10 @@ const storyFiles = import.meta.glob('../stories/**/*.txt', {
 })
 
 const monthDate = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' })
+const storyHtmlSchema = {
+  ...defaultSchema,
+  tagNames: [...defaultSchema.tagNames, 'u'],
+}
 
 function parseFile(path, raw) {
   const fileName = path.split('/').pop().replace(/\.txt$/, '')
@@ -207,7 +212,7 @@ function App() {
             </nav>
           )}
           <article aria-label={activeStory.chapters.length > 1 ? activeChapter.title : activeStory.title}>
-            <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>{activeChapter.body}</ReactMarkdown>
+            <ReactMarkdown rehypePlugins={[rehypeRaw, [rehypeSanitize, storyHtmlSchema]]}>{activeChapter.body}</ReactMarkdown>
           </article>
           <footer className="reader-footer">
             {activeStory.chapters.length > 1 ? (

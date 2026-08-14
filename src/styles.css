@@ -105,6 +105,7 @@ main:focus { outline: none; }
 .chapter-list button[aria-current='page'] { border-color: rgba(73, 52, 135, .25); background: rgba(231, 179, 199, .42); color: var(--midnight); font-weight: 600; }
 .reader article { color: var(--midnight); font: 20px/1.75 'Newsreader', serif; }
 .reader article p { white-space: pre-line; margin: 0 0 1.5em; }
+.reader article u { text-decoration-thickness: .08em; text-underline-offset: .14em; }
 .reader article p:first-child::first-letter { float: left; font-size: 76px; line-height: .73; padding: 12px 9px 0 0; color: var(--deep-violet); }
 .reader-footer { text-align: center; border-top: 1px solid rgba(73, 52, 135, .2); margin-top: 75px; padding-top: 48px; color: #715787; }
 .reader-footer p { font: italic 18px 'Newsreader', serif; }
