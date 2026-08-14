@@ -1,0 +1,9 @@
+---
+title: Test Story
+tags: mystery, short fiction
+date: 2026-08-08
+excerpt: An optional short description shown on the collection page.
+---
+Your story begins here
+
+thsi is a test
