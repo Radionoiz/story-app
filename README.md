@@ -66,6 +66,23 @@ The first chapter begins here.
 
 Chapters are sorted by `order`. If `order` is omitted, the number at the beginning of the filename is used. Each chapter receives its own URL and previous/next navigation. The original single-file story format remains supported.
 
+## Add a blog post
+
+Add a `.txt` file to `blog/`. Blog posts use the same front matter and Markdown/HTML formatting as stories:
+
+```txt
+---
+title: Notes from the writing desk
+tags: behind the scenes, writing
+date: 2026-08-27
+excerpt: A short description for the blog listing.
+slug: notes-from-the-writing-desk
+---
+Post text begins here.
+```
+
+Posts are automatically ordered newest-first by `date`. The home page shows the three most recent posts; the full chronological listing is available at `#/blog`.
+
 ## Format story text
 
 Story and chapter bodies support Markdown and safe HTML. For example:
