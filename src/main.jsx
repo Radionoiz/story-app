@@ -332,6 +332,21 @@ function App() {
           <div className="hero-stats"><span>{stories.length} {stories.length === 1 ? 'story' : 'stories'}</span><span>{tags.length} collections</span></div>
         </section>
 
+        <section className="blog-preview" aria-labelledby="blog-preview-title">
+          <div className="section-head">
+            <div><p className="eyebrow">From the journal</p><h2 id="blog-preview-title">Latest blog posts</h2></div>
+            <a className="text-link" href="#/blog">View all posts -&gt;</a>
+          </div>
+          {blogPosts.length ? <div className="blog-grid">
+            {blogPosts.slice(0, 3).map((post) => <button className="blog-card" onClick={() => openBlog(post.slug)} key={post.slug}>
+              <div className="card-tags">{post.tags.map((item) => <span key={item}>{item}</span>)}</div>
+              <h3>{post.title}</h3>
+              <p>{post.excerpt}</p>
+              <div className="card-meta"><span>{post.date && monthDate.format(new Date(`${post.date}T12:00:00`))}</span><span>{post.minutes} min read</span></div>
+            </button>)}
+          </div> : <p className="blog-empty">No blog posts yet. Add one in <code>blog/</code>.</p>}
+        </section>
+
         <section className="collection" id="collection">
           <div className="section-head">
             <div><p className="eyebrow">The collection</p><h2>Choose a story</h2></div>
@@ -361,20 +376,7 @@ function App() {
           ) : <div className="empty"><span>∅</span><h3>No stories found</h3><p>Try another search or collection.</p></div>}
         </section>
 
-        <section className="blog-preview" aria-labelledby="blog-preview-title">
-          <div className="section-head">
-            <div><p className="eyebrow">From the journal</p><h2 id="blog-preview-title">Latest blog posts</h2></div>
-            <a className="text-link" href="#/blog">View all posts -&gt;</a>
-          </div>
-          {blogPosts.length ? <div className="blog-grid">
-            {blogPosts.slice(0, 3).map((post) => <button className="blog-card" onClick={() => openBlog(post.slug)} key={post.slug}>
-              <div className="card-tags">{post.tags.map((item) => <span key={item}>{item}</span>)}</div>
-              <h3>{post.title}</h3>
-              <p>{post.excerpt}</p>
-              <div className="card-meta"><span>{post.date && monthDate.format(new Date(`${post.date}T12:00:00`))}</span><span>{post.minutes} min read</span></div>
-            </button>)}
-          </div> : <p className="blog-empty">No blog posts yet. Add one in <code>blog/</code>.</p>}
-        </section>
+        
       </main>
 
       <footer className="site-footer"><p>A growing shelf of original stories.</p><span>Made for slow reading.</span></footer>
