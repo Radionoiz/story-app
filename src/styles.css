@@ -87,6 +87,23 @@ main:focus { outline: none; }
 .empty span { font: 50px 'Newsreader'; color: var(--starlight); }.empty h3 { color: var(--pale-pink); font: 32px 'Newsreader'; margin: 15px 0 4px; }.empty p { margin: 0; }
 .site-footer { padding: 55px clamp(24px, 7vw, 110px); display: flex; align-items: center; gap: 20px; color: #604f78; font: 15px 'Newsreader', serif; background: linear-gradient(110deg, #e5b5c8, #ecc5d0); }
 .site-footer span:last-child { margin-left: auto; font: 10px 'DM Sans'; text-transform: uppercase; letter-spacing: .15em; }
+.blog-preview, .blog-index { padding: 92px clamp(24px, 7vw, 110px) 120px; background: #f7dce3; color: var(--midnight); }
+.blog-preview .eyebrow, .blog-index .eyebrow { color: var(--deep-violet); }
+.blog-preview h2, .blog-index h1 { font: 400 clamp(42px, 5vw, 66px)/1 'Newsreader', serif; margin: 0; }
+.text-link { color: var(--deep-violet); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; }
+.blog-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 44px; }
+.blog-card { display: flex; min-height: 275px; flex-direction: column; align-items: flex-start; border: 1px solid rgba(73, 52, 135, .18); border-radius: 12px; background: rgba(255, 255, 255, .28); color: var(--midnight); padding: 26px; text-align: left; cursor: pointer; transition: transform .2s, background .2s, box-shadow .2s; }
+.blog-card:hover { background: rgba(255, 255, 255, .58); box-shadow: 0 12px 28px rgba(73, 52, 135, .12); transform: translateY(-3px); }
+.blog-card .card-tags { color: var(--deep-violet); }
+.blog-card h2, .blog-card h3 { font: 400 30px/1.08 'Newsreader', serif; margin: 16px 0 12px; }
+.blog-card p { color: #5c5278; font: 16px/1.5 'Newsreader', serif; margin: 0; }
+.blog-card .card-meta { width: 100%; margin-top: auto; padding-top: 22px; color: #715787; }
+.blog-index { min-height: calc(100vh - 88px); }
+.blog-index-heading { max-width: 650px; }
+.blog-index-heading > p:last-child { color: #5c5278; font: 20px/1.5 'Newsreader', serif; margin: 24px 0 0; }
+.blog-index .blog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.blog-index .blog-card { min-height: 300px; }
+.blog-empty { color: #715787; font: 18px/1.5 'Newsreader', serif; margin: 44px 0 0; }
 .button-reset { border: 0; background: transparent; cursor: pointer; }
 .reader-shell { background: linear-gradient(180deg, var(--pale-pink), #edc4da); }
 .reader-nav .back { color: var(--deep-violet); font-size: 12px; text-transform: uppercase; letter-spacing: .1em; }
@@ -105,6 +122,7 @@ main:focus { outline: none; }
 .chapter-list button[aria-current='page'] { border-color: rgba(73, 52, 135, .25); background: rgba(231, 179, 199, .42); color: var(--midnight); font-weight: 600; }
 .reader article { color: var(--midnight); font: 20px/1.75 'Newsreader', serif; }
 .reader article p { white-space: pre-line; margin: 0 0 1.5em; }
+.reader article u { text-decoration-thickness: .08em; text-underline-offset: .14em; }
 .reader article p:first-child::first-letter { float: left; font-size: 76px; line-height: .73; padding: 12px 9px 0 0; color: var(--deep-violet); }
 .reader-footer { text-align: center; border-top: 1px solid rgba(73, 52, 135, .2); margin-top: 75px; padding-top: 48px; color: #715787; }
 .reader-footer p { font: italic 18px 'Newsreader', serif; }
@@ -137,5 +155,6 @@ main:focus { outline: none; }
   .hero-stats { color: #403963; font-size: 11px; font-weight: 600; }
   .section-head { align-items: stretch; flex-direction: column; }.search { width: 100%; }.story-card { grid-template-columns: 40px 1fr; gap: 10px; }.card-meta { align-items: end; }
   .site-footer { align-items: flex-start; }.site-footer span:last-child { display: none; }.reader-nav .brand span { display: none; }.reader { padding-top: 65px; }.reader h1 { margin-left: 0; margin-right: 0; }.reader-meta { flex-wrap: wrap; margin-bottom: 50px; }.reader article { font-size: 19px; }
+  .blog-preview, .blog-index { padding-top: 65px; padding-bottom: 75px; }.blog-grid, .blog-index .blog-grid { grid-template-columns: 1fr; margin-top: 32px; }.blog-card { min-height: 0; }.blog-card p { margin-bottom: 20px; }
   .chapter-list { grid-template-columns: 1fr; margin-top: -18px; margin-bottom: 48px; }.chapter-pagination { grid-template-columns: 1fr; }.chapter-pagination > span { display: none; }
 }

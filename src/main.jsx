@@ -1,5 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
+import rehypeSanitize from 'rehype-sanitize'
+import { defaultSchema } from 'hast-util-sanitize'
 import './styles.css'
 
 const storyFiles = import.meta.glob('../stories/**/*.txt', {
@@ -8,7 +12,17 @@ const storyFiles = import.meta.glob('../stories/**/*.txt', {
   eager: true,
 })
 
+const blogFiles = import.meta.glob('../blog/**/*.txt', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+})
+
 const monthDate = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' })
+const storyHtmlSchema = {
+  ...defaultSchema,
+  tagNames: [...defaultSchema.tagNames, 'u'],
+}
 
 function parseFile(path, raw) {
   const fileName = path.split('/').pop().replace(/\.txt$/, '')
@@ -98,6 +112,9 @@ function buildLibrary(files) {
 }
 
 const stories = buildLibrary(storyFiles)
+const blogPosts = Object.entries(blogFiles)
+  .map(([path, raw]) => parseFile(path, raw))
+  .sort((a, b) => (b.date || '').localeCompare(a.date || '') || a.title.localeCompare(b.title))
 
 function FontToggle({ enabled, onChange }) {
   return (
@@ -141,12 +158,14 @@ function App() {
   const activeStory = stories.find((story) => story.slug === storySlug)
   const activeChapter = activeStory?.chapters.find((chapter) => chapter.slug === chapterSlug) || activeStory?.chapters[0]
   const activeChapterIndex = activeStory?.chapters.indexOf(activeChapter) ?? -1
+  const activeBlogPost = storySlug === 'blog' ? blogPosts.find((post) => post.slug === chapterSlug) : undefined
 
   useEffect(() => {
     const chapterTitle = activeStory?.chapters.length > 1 ? ` — ${activeChapter?.title}` : ''
-    document.title = activeStory ? `${activeStory.title}${chapterTitle} | Nix's Story Chronicles` : "Nix's Story Chronicles"
+    const pageTitle = activeStory ? `${activeStory.title}${chapterTitle}` : activeBlogPost?.title
+    document.title = pageTitle ? `${pageTitle} | Nix's Story Chronicles` : "Nix's Story Chronicles"
     if (activePath) mainRef.current?.focus()
-  }, [activePath, activeStory, activeChapter])
+  }, [activePath, activeStory, activeChapter, activeBlogPost])
 
   function openStory(slug) {
     const story = stories.find((item) => item.slug === slug)
@@ -167,6 +186,74 @@ function App() {
     history.pushState('', document.title, location.pathname + location.search)
     setActivePath('')
     scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+  }
+
+  function openBlog(slug) {
+    const path = `blog/${slug}`
+    location.hash = `/${path.split('/').map(encodeURIComponent).join('/')}`
+    setActivePath(path)
+    scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+  }
+
+  function openBlogIndex() {
+    location.hash = '/blog'
+    setActivePath('blog')
+    scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+  }
+
+  if (activeBlogPost) {
+    return (
+      <div className={`reader-shell${hyperlegible ? ' hyperlegible' : ''}`}>
+        <a className="skip-link" href="#main-content">Skip to post</a>
+        <header className="reader-nav" aria-label="Site header">
+          <button className="brand button-reset" onClick={goHome}><span>Nix's Story Chronicles</span></button>
+          <nav className="nav-actions" aria-label="Blog navigation">
+            <FontToggle enabled={hyperlegible} onChange={setHyperlegible} />
+            <button className="back button-reset" onClick={openBlogIndex}>All blog posts</button>
+          </nav>
+        </header>
+        <main className="reader" id="main-content" ref={mainRef} tabIndex="-1">
+          <div className="reader-kicker">{activeBlogPost.tags.join(' / ') || 'Blog'}</div>
+          <h1>{activeBlogPost.title}</h1>
+          <div className="reader-meta">
+            {activeBlogPost.date && <span>{monthDate.format(new Date(`${activeBlogPost.date}T12:00:00`))}</span>}
+            <span>{activeBlogPost.minutes} min read</span>
+            <span>{activeBlogPost.words.toLocaleString()} words</span>
+          </div>
+          <article aria-label={activeBlogPost.title}>
+            <ReactMarkdown rehypePlugins={[rehypeRaw, [rehypeSanitize, storyHtmlSchema]]}>{activeBlogPost.body}</ReactMarkdown>
+          </article>
+          <footer className="reader-footer"><button onClick={openBlogIndex}>Browse all blog posts</button></footer>
+        </main>
+      </div>
+    )
+  }
+
+  if (activePath === 'blog') {
+    return (
+      <div className={`site-shell${hyperlegible ? ' hyperlegible' : ''}`}>
+        <a className="skip-link" href="#main-content">Skip to blog posts</a>
+        <header className="topbar" aria-label="Site header">
+          <button className="brand button-reset" onClick={goHome}><span>Nix's Story Chronicles</span></button>
+          <nav className="nav-actions" aria-label="Site navigation">
+            <FontToggle enabled={hyperlegible} onChange={setHyperlegible} />
+            <button className="back button-reset" onClick={goHome}>All stories</button>
+          </nav>
+        </header>
+        <main className="blog-index" id="main-content" ref={mainRef} tabIndex="-1">
+          <div className="blog-index-heading"><p className="eyebrow">From the journal</p><h1>All blog posts</h1><p>Notes, reflections, and news from Nix's writing desk.</p></div>
+          {blogPosts.length ? <div className="blog-grid">
+            {blogPosts.map((post) => <button className="blog-card" onClick={() => openBlog(post.slug)} key={post.slug}>
+              <div className="card-tags">{post.tags.map((item) => <span key={item}>{item}</span>)}</div>
+              <h2>{post.title}</h2>
+              <p>{post.excerpt}</p>
+              <div className="card-meta"><span>{post.date && monthDate.format(new Date(`${post.date}T12:00:00`))}</span><span>{post.minutes} min read</span></div>
+            </button>)}
+          </div> : <div className="empty blog-empty"><h2>No blog posts yet</h2><p>Add a text file to the <code>blog/</code> directory to publish the first one.</p></div>}
+        </main>
+        <footer className="site-footer"><p>A growing shelf of original stories.</p><span>Made for slow reading.</span></footer>
+      </div>
+    )
   }
 
   if (activeStory && activeChapter) {
@@ -203,7 +290,9 @@ function App() {
               ))}
             </nav>
           )}
-          <article aria-label={activeStory.chapters.length > 1 ? activeChapter.title : activeStory.title}>{activeChapter.body.split(/\n\s*\n/).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</article>
+          <article aria-label={activeStory.chapters.length > 1 ? activeChapter.title : activeStory.title}>
+            <ReactMarkdown rehypePlugins={[rehypeRaw, [rehypeSanitize, storyHtmlSchema]]}>{activeChapter.body}</ReactMarkdown>
+          </article>
           <footer className="reader-footer">
             {activeStory.chapters.length > 1 ? (
               <nav className="chapter-pagination" aria-label="Chapter pagination">
@@ -230,6 +319,7 @@ function App() {
         <div className="brand"><span>Nix's Story Chronicles</span></div>
         <nav className="nav-actions" aria-label="Site navigation">
           <FontToggle enabled={hyperlegible} onChange={setHyperlegible} />
+          <a href="#/blog">Blog</a>
           <a href="#collection">Browse the collection ↓</a>
         </nav>
       </header>
@@ -240,6 +330,21 @@ function App() {
           <h1>Stories from Nix's<br /><em>personal collection.</em></h1>
           <p className="intro">All minds, all worlds, moments of love and longing, to disappear into and discover.</p>
           <div className="hero-stats"><span>{stories.length} {stories.length === 1 ? 'story' : 'stories'}</span><span>{tags.length} collections</span></div>
+        </section>
+
+        <section className="blog-preview" aria-labelledby="blog-preview-title">
+          <div className="section-head">
+            <div><p className="eyebrow">From the journal</p><h2 id="blog-preview-title">Latest blog posts</h2></div>
+            <a className="text-link" href="#/blog">View all posts -&gt;</a>
+          </div>
+          {blogPosts.length ? <div className="blog-grid">
+            {blogPosts.slice(0, 3).map((post) => <button className="blog-card" onClick={() => openBlog(post.slug)} key={post.slug}>
+              <div className="card-tags">{post.tags.map((item) => <span key={item}>{item}</span>)}</div>
+              <h3>{post.title}</h3>
+              <p>{post.excerpt}</p>
+              <div className="card-meta"><span>{post.date && monthDate.format(new Date(`${post.date}T12:00:00`))}</span><span>{post.minutes} min read</span></div>
+            </button>)}
+          </div> : <p className="blog-empty">No blog posts yet. Add one in <code>blog/</code>.</p>}
         </section>
 
         <section className="collection" id="collection">
@@ -270,6 +375,8 @@ function App() {
             </div>
           ) : <div className="empty"><span>∅</span><h3>No stories found</h3><p>Try another search or collection.</p></div>}
         </section>
+
+        
       </main>
 
       <footer className="site-footer"><p>A growing shelf of original stories.</p><span>Made for slow reading.</span></footer>
