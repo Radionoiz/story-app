@@ -163,7 +163,7 @@ function App() {
   useEffect(() => {
     const chapterTitle = activeStory?.chapters.length > 1 ? ` — ${activeChapter?.title}` : ''
     const pageTitle = activeStory ? `${activeStory.title}${chapterTitle}` : activeBlogPost?.title
-    document.title = pageTitle ? `${pageTitle} | Nix's Story Chronicles` : "Nix's Story Chronicles"
+    document.title = pageTitle ? `${pageTitle} | RadioNoiz Novels` : "Radionoiz Novels"
     if (activePath) mainRef.current?.focus()
   }, [activePath, activeStory, activeChapter, activeBlogPost])
 
@@ -327,7 +327,7 @@ function App() {
       <main id="main-content" ref={mainRef} tabIndex="-1">
         <section className="hero">
           <p className="eyebrow">Original fiction, collected</p>
-          <h1>Stories from Nix's<br /><em>personal collection.</em></h1>
+          <h1>Stories from my<br /><em>personal collection.</em></h1>
           <p className="intro">All minds, all worlds, moments of love and longing, to disappear into and discover.</p>
           <div className="hero-stats"><span>{stories.length} {stories.length === 1 ? 'story' : 'stories'}</span><span>{tags.length} collections</span></div>
         </section>
